@@ -242,7 +242,7 @@ Return ONLY valid JSON objects, one per line. No markdown, no explanations.`
       model: "google/gemini-3-flash",
       prompt,
       temperature: 0.7,
-      maxTokens: 1500,
+      maxOutputTokens: 1500,
     })
 
     const lines = result.text
