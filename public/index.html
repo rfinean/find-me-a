@@ -164,43 +164,58 @@
 
       // Call the backend search API
       try {
-        const params = new URLSearchParams({ what, where, email });
-        const resp = await fetch('/api/search?' + params.toString(), { method: 'POST' });
+        const resp = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ what, where, email })
+        });
         const data = await resp.json().catch(() => ({}));
 
-        if (resp.ok && data.ready) {
-          const catalogUrl = 'catalog.html?what=' + encodeURIComponent(what) + '&where=' + encodeURIComponent(where);
-          viewResultsLink.href = catalogUrl;
-          viewResultsLink.style.display = 'inline-flex';
+        if (resp.ok && data.jobId) {
+          // Poll for readiness
+          pollForResults(data.jobId, what, where);
         } else {
-          // Poll for readiness every 5 seconds
-          pollForResults(what, where);
+          formError.textContent = data.error || 'Something went wrong. Please try again.';
+          searchSection.style.display = '';
+          trustStrip.style.display = '';
+          holdingPage.style.display = 'none';
         }
       } catch (err) {
-        // Offline / no backend yet — simulate polling
-        pollForResults(what, where);
+        formError.textContent = 'Network error. Please check your connection and try again.';
+        searchSection.style.display = '';
+        trustStrip.style.display = '';
+        holdingPage.style.display = 'none';
       }
     });
 
-    function pollForResults(what, where) {
+    function pollForResults(jobId, what, where) {
       let attempts = 0;
-      const maxAttempts = 24; // 2 min at 5s intervals
+      const maxAttempts = 36; // 3 min at 5s intervals
       const interval = setInterval(async () => {
         attempts++;
         try {
-          const params = new URLSearchParams({ what, where });
-          const resp = await fetch('/api/status?' + params.toString());
+          const resp = await fetch('/api/status?jobId=' + encodeURIComponent(jobId));
           const data = await resp.json().catch(() => ({}));
-          if ((resp.ok && data.ready) || attempts >= maxAttempts) {
+          if (resp.ok && data.status === 'completed') {
             clearInterval(interval);
-            const catalogUrl = 'catalog.html?what=' + encodeURIComponent(what) + '&where=' + encodeURIComponent(where);
+            const catalogUrl = 'catalog.html?jobId=' + encodeURIComponent(jobId);
+            viewResultsLink.href = catalogUrl;
+            viewResultsLink.style.display = 'inline-flex';
+          } else if (data.status === 'failed') {
+            clearInterval(interval);
+            document.getElementById('holdingBody').innerHTML = 
+              '<strong>Sorry!</strong> We couldn&apos;t complete your search. Please <a href="index.html">try again</a>.';
+          } else if (attempts >= maxAttempts) {
+            clearInterval(interval);
+            // Show link anyway after timeout
+            const catalogUrl = 'catalog.html?jobId=' + encodeURIComponent(jobId);
             viewResultsLink.href = catalogUrl;
             viewResultsLink.style.display = 'inline-flex';
           }
         } catch {
           if (attempts >= maxAttempts) {
             clearInterval(interval);
-            const catalogUrl = 'catalog.html?what=' + encodeURIComponent(what) + '&where=' + encodeURIComponent(where);
+            const catalogUrl = 'catalog.html?jobId=' + encodeURIComponent(jobId);
             viewResultsLink.href = catalogUrl;
             viewResultsLink.style.display = 'inline-flex';
           }

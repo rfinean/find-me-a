@@ -95,78 +95,64 @@
   <script>
     // ---- Parse URL params ----
     const params = new URLSearchParams(window.location.search);
-    const what = params.get('what') || '';
-    const where = params.get('where') || '';
+    const jobId = params.get('jobId') || '';
+    let what = '';
+    let where = '';
 
-    document.getElementById('catalogTitle').textContent = what ? 'Results for: ' + what : 'Results';
-    if (where) document.getElementById('catalogSub').textContent = 'Near ' + where;
-
-    // ---- Sample / mock data (replaced by real API call below) ----
-    const mockResults = [
-      {
-        name: 'City Spine & Wellness Clinic',
-        what: 'Physiotherapy and chiropractic care specialising in lower back and spine conditions.',
-        where: 'SW1A 1AA (0.4 mi)',
-        rating: 4.8,
-        reviewCount: 142,
-        reviewSource: 'Google',
-        phone: '+44 20 7946 0000',
-        website: 'https://example.com',
-        email: 'info@cityspiheclinic.example',
-      },
-      {
-        name: 'BackCare Physiotherapy',
-        what: 'NHS-registered physio focusing on musculoskeletal and spinal rehabilitation.',
-        where: 'SW1B 2BB (0.9 mi)',
-        rating: 4.6,
-        reviewCount: 89,
-        reviewSource: 'Trustpilot',
-        phone: '+44 20 7946 0111',
-        website: 'https://example.com',
-        email: null,
-      },
-      {
-        name: 'Dr. Sarah Okafor — Osteopath',
-        what: 'Osteopathic treatment for chronic and acute back pain, sciatica, and disc problems.',
-        where: 'SW1C 3CC (1.2 mi)',
-        rating: 5.0,
-        reviewCount: 37,
-        reviewSource: 'Google',
-        phone: null,
-        website: 'https://example.com',
-        email: 'sarah@okaforosteo.example',
-      },
-      {
-        name: 'HealWell Integrated Health',
-        what: 'Multi-disciplinary clinic: physio, acupuncture, and sports medicine for back conditions.',
-        where: 'SW1D 4DD (1.8 mi)',
-        rating: 4.5,
-        reviewCount: 203,
-        reviewSource: 'Google',
-        phone: '+44 20 7946 0222',
-        website: 'https://example.com',
-        email: 'hello@healwell.example',
-      },
-    ];
-
-    // ---- Fetch from API or fall back to mock ----
+    // ---- Fetch from API ----
     async function loadResults() {
-      let results = null;
+      if (!jobId) {
+        document.getElementById('catalogLoading').innerHTML = '<p>No search ID provided. <a href="index.html">Start a new search</a></p>';
+        return;
+      }
+
       try {
-        const url = '/api/results?' + new URLSearchParams({ what, where }).toString();
-        const resp = await fetch(url);
-        if (resp.ok) {
-          const data = await resp.json();
-          results = data.results;
+        const resp = await fetch('/api/results?jobId=' + encodeURIComponent(jobId));
+        const data = await resp.json();
+
+        if (resp.status === 202) {
+          // Still processing
+          document.getElementById('catalogLoading').innerHTML = 
+            '<div class="spinner"></div><p>Your search is still processing. Please wait&hellip;</p>';
+          setTimeout(loadResults, 3000);
+          return;
         }
-      } catch (_) {}
 
-      // Fall back to mock for demo purposes
-      if (!results || !results.length) results = mockResults;
+        if (!resp.ok || !data.results) {
+          document.getElementById('catalogLoading').innerHTML = 
+            '<p>Could not load results. <a href="index.html">Try a new search</a></p>';
+          return;
+        }
 
-      document.getElementById('catalogLoading').style.display = 'none';
-      renderTable(results);
-      renderCards(results);
+        what = data.what || '';
+        where = data.where || '';
+        
+        document.getElementById('catalogTitle').textContent = what ? 'Results for: ' + what : 'Results';
+        if (where) document.getElementById('catalogSub').textContent = 'Near ' + where;
+
+        // Transform API results to match render format
+        const results = data.results.map(function(r) {
+          return {
+            id: r.id,
+            name: r.name,
+            what: r.description || '',
+            where: r.address || where,
+            rating: r.rating || 0,
+            reviewCount: r.reviewCount || 0,
+            reviewSource: r.source || 'Web',
+            phone: r.phone,
+            website: r.website,
+            email: r.email
+          };
+        });
+
+        document.getElementById('catalogLoading').style.display = 'none';
+        renderTable(results);
+        renderCards(results);
+      } catch (err) {
+        document.getElementById('catalogLoading').innerHTML = 
+          '<p>Network error. <a href="index.html">Try again</a></p>';
+      }
     }
 
     function starHTML(rating) {
@@ -257,7 +243,7 @@
       e.preventDefault();
       const input = document.getElementById('chatInput');
       const msg = input.value.trim();
-      if (!msg) return;
+      if (!msg || !currentProvider || !currentProvider.id) return;
       input.value = '';
       appendMessage('user', esc(msg));
       chatHistory.push({ role: 'user', content: msg });
@@ -270,15 +256,13 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            provider: currentProvider,
-            messages: chatHistory,
-            what: what,
-            where: where
+            resultId: currentProvider.id,
+            message: msg
           })
         });
         const data = await resp.json();
         removeMessage(typingId);
-        const reply = data.reply || 'Sorry, I could not get a response right now.';
+        const reply = data.message || 'Sorry, I could not get a response right now.';
         appendMessage('assistant', esc(reply));
         chatHistory.push({ role: 'assistant', content: reply });
       } catch (_) {
