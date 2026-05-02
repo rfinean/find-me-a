@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find Me A… — Free local service finder</title>
+  <meta name="description" content="Find Me A… is a free service that helps you find local experts and service providers near you. Search by need and postcode." />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta property="og:title" content="Find Me A… — Free local service finder" />
+  <meta property="og:description" content="Find local experts and service providers near you, free to use." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="logo">Find Me A<span class="logo-dot">…</span></a>
+      <nav>
+        <a href="tips.html" class="nav-link">Tips &amp; FAQs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Search -->
+    <section class="hero" id="search-section">
+      <div class="container hero-inner">
+        <h1 class="hero-title">Find the right person,<br>close to you.</h1>
+        <p class="hero-sub">Free AI-powered local service search. We research and email you the best matches.</p>
+
+        <form class="search-form" id="searchForm" novalidate>
+          <div class="field-group">
+            <label for="what" class="field-label">Find me&hellip;</label>
+            <input
+              type="text"
+              id="what"
+              name="what"
+              class="field-input"
+              placeholder="e.g. medical help for a bad lower spine"
+              autocomplete="off"
+              required
+            />
+          </div>
+
+          <div class="field-group">
+            <label for="where" class="field-label">Near&hellip;</label>
+            <input
+              type="text"
+              id="where"
+              name="where"
+              class="field-input"
+              placeholder="postcode"
+              autocomplete="postal-code"
+              required
+            />
+          </div>
+
+          <div class="field-group">
+            <label for="email" class="field-label">My email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="field-input"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            />
+            <p class="field-hint">We&apos;ll send you a link when your results are ready.</p>
+          </div>
+
+          <button type="submit" class="btn-primary" id="searchBtn">
+            <span class="btn-label">Search</span>
+            <span class="btn-icon" aria-hidden="true">&#8594;</span>
+          </button>
+
+          <p class="form-error" id="formError" role="alert" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- Working on it (hidden until submit) -->
+    <section class="holding" id="holdingPage" style="display:none;" aria-live="polite">
+      <div class="container holding-inner">
+        <div class="spinner" aria-label="Searching…"></div>
+        <h2 class="holding-title">Working on it&hellip;</h2>
+        <p class="holding-body" id="holdingBody">
+          This might take a little while. We will email you a link to the results when
+          they are ready, or you can wait here whilst we find someone to help with
+          <strong id="holdingWhat"></strong>.
+        </p>
+        <p class="holding-hint">
+          Results usually appear within 1&ndash;2 minutes. We&apos;ll search
+          reviews, directories, and professional listings near you.
+        </p>
+        <a href="#" class="btn-secondary" id="viewResultsLink" style="display:none;">View results now &rarr;</a>
+      </div>
+    </section>
+
+    <!-- Trust strip -->
+    <section class="trust" id="trustStrip">
+      <div class="container trust-inner">
+        <div class="trust-item">
+          <span class="trust-icon">&#128269;</span>
+          <span>AI-powered research</span>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">&#127968;</span>
+          <span>Local first</span>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">&#11088;</span>
+          <span>Real reviews sourced</span>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">&#128248;</span>
+          <span>100% free to use</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>Find Me A&hellip; &mdash; free, community-supported</span>
+      <a href="tips.html">Leave a tip</a>
+    </div>
+  </footer>
+
+  <script>
+    const form = document.getElementById('searchForm');
+    const holdingPage = document.getElementById('holdingPage');
+    const searchSection = document.getElementById('search-section');
+    const trustStrip = document.getElementById('trustStrip');
+    const holdingWhat = document.getElementById('holdingWhat');
+    const viewResultsLink = document.getElementById('viewResultsLink');
+    const formError = document.getElementById('formError');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      formError.textContent = '';
+
+      const what = document.getElementById('what').value.trim();
+      const where = document.getElementById('where').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      if (!what) { formError.textContent = 'Please describe what you need.'; return; }
+      if (!where) { formError.textContent = 'Please enter your postcode.'; return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        formError.textContent = 'Please enter a valid email address.';
+        return;
+      }
+
+      // Show holding page
+      searchSection.style.display = 'none';
+      trustStrip.style.display = 'none';
+      holdingPage.style.display = '';
+      holdingWhat.textContent = what;
+
+      // Call the backend search API
+      try {
+        const params = new URLSearchParams({ what, where, email });
+        const resp = await fetch('/api/search?' + params.toString(), { method: 'POST' });
+        const data = await resp.json().catch(() => ({}));
+
+        if (resp.ok && data.ready) {
+          const catalogUrl = 'catalog.html?what=' + encodeURIComponent(what) + '&where=' + encodeURIComponent(where);
+          viewResultsLink.href = catalogUrl;
+          viewResultsLink.style.display = 'inline-flex';
+        } else {
+          // Poll for readiness every 5 seconds
+          pollForResults(what, where);
+        }
+      } catch (err) {
+        // Offline / no backend yet — simulate polling
+        pollForResults(what, where);
+      }
+    });
+
+    function pollForResults(what, where) {
+      let attempts = 0;
+      const maxAttempts = 24; // 2 min at 5s intervals
+      const interval = setInterval(async () => {
+        attempts++;
+        try {
+          const params = new URLSearchParams({ what, where });
+          const resp = await fetch('/api/status?' + params.toString());
+          const data = await resp.json().catch(() => ({}));
+          if ((resp.ok && data.ready) || attempts >= maxAttempts) {
+            clearInterval(interval);
+            const catalogUrl = 'catalog.html?what=' + encodeURIComponent(what) + '&where=' + encodeURIComponent(where);
+            viewResultsLink.href = catalogUrl;
+            viewResultsLink.style.display = 'inline-flex';
+          }
+        } catch {
+          if (attempts >= maxAttempts) {
+            clearInterval(interval);
+            const catalogUrl = 'catalog.html?what=' + encodeURIComponent(what) + '&where=' + encodeURIComponent(where);
+            viewResultsLink.href = catalogUrl;
+            viewResultsLink.style.display = 'inline-flex';
+          }
+        }
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

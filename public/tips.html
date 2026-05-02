@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tips &amp; FAQs — Find Me A…</title>
+  <meta name="description" content="Frequently asked questions about Find Me A… and how to leave a tip to support the free service." />
+  <meta name="theme-color" content="#1a1a2e" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="logo">Find Me A<span class="logo-dot">…</span></a>
+      <nav>
+        <a href="index.html" class="nav-link">Search</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="tips-hero">
+      <div class="container">
+        <h1 class="tips-title">Tips &amp; FAQs</h1>
+        <p class="tips-sub">Everything you need to know — and how to keep this free service running.</p>
+      </div>
+    </section>
+
+    <!-- Tip jar section -->
+    <section class="tipjar-section">
+      <div class="container tipjar-inner">
+        <div class="tipjar-card">
+          <h2 class="tipjar-heading">Support Find Me A&hellip;</h2>
+          <p class="tipjar-body">
+            Find Me A&hellip; is completely free to use and kept alive entirely by voluntary tips from
+            grateful users. If a match leads to real work, we suggest a tip of roughly
+            <strong>2% of the contract value</strong> &mdash; but every penny helps, big or small.
+          </p>
+          <div class="tipjar-buttons">
+            <a
+              href="https://ko-fi.com"
+              target="_blank"
+              rel="noopener"
+              class="tipjar-btn tipjar-btn--kofi"
+              aria-label="Support us on Ko-fi"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 7h16c1.1 0 2 .9 2 2v1c0 1.1-.9 2-2 2h-1c0 2.2-1.8 4-4 4H6c-2.2 0-4-1.8-4-4V7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M17 7v6" stroke="currentColor" stroke-width="1.8"/><path d="M6 15v2a1 1 0 001 1h6a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.8"/></svg>
+              Buy me a coffee (Ko-fi)
+            </a>
+            <a
+              href="https://www.paypal.com/paypalme"
+              target="_blank"
+              rel="noopener"
+              class="tipjar-btn tipjar-btn--paypal"
+              aria-label="Tip via PayPal"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 20h3l1-4h2c3 0 5-1.5 5-5s-2-5-5-5H7L5 20" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              Tip via PayPal
+            </a>
+          </div>
+          <p class="tipjar-note">All tips go directly to covering AI compute costs, hosting, and development time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ accordion -->
+    <section class="faq-section">
+      <div class="container faq-inner">
+        <h2 class="faq-heading">Frequently Asked Questions</h2>
+
+        <div class="faq-list" id="faqList">
+
+          <details class="faq-item" open>
+            <summary class="faq-question">Is Find Me A&hellip; really free?</summary>
+            <div class="faq-answer">
+              <p>Yes, entirely. You pay nothing to search, nothing to view results, and nothing to contact the providers we find. The service is kept running by voluntary tips from happy users. If a lead turns into real work, please consider leaving a small tip &mdash; 2% of the contract value is our suggestion, but anything is appreciated.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How does the search work?</summary>
+            <div class="faq-answer">
+              <p>We use an AI agent to search the web, professional directories, review sites, and local listings for providers who match your specific request and are geographically close to you. The agent reads reviews, verifies contact details, and ranks results by relevance and proximity.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Why does it take a few minutes?</summary>
+            <div class="faq-answer">
+              <p>Unlike a simple keyword search, our AI agent actively browses multiple sources in real time &mdash; directories, Google Maps, Trustpilot, Yelp, professional associations, and more. This takes a little longer than a database lookup but produces far richer, more relevant results. We cache results so subsequent searches for the same need in the same area are much faster.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Why do you need my email address?</summary>
+            <div class="faq-answer">
+              <p>Because the search can take a minute or two, we email you a direct link to your results so you do not have to stay on the page. We do not share your email with anyone, do not send marketing emails, and do not store it longer than necessary. The only email you will receive is the results link, plus a gentle reminder about tips if you found the lead valuable.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What kinds of things can I search for?</summary>
+            <div class="faq-answer">
+              <p>Almost anything where you need a local expert or service: medical specialists, tradespeople, legal advice, tutors, childcare, pet services, financial advisers, therapists, mechanics, caterers &mdash; the list is open-ended. The more specific your description, the better the results. For example, &ldquo;physiotherapist specialising in lower back pain&rdquo; will produce better results than just &ldquo;physio&rdquo;.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How accurate are the results?</summary>
+            <div class="faq-answer">
+              <p>We do our best to find genuine, up-to-date information. However, businesses move, close, or change their services, so always verify contact details directly. We display third-party review scores as found; we do not manufacture or alter them. Results are cached for up to six months, after which they are refreshed automatically.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Can I get results without providing a postcode?</summary>
+            <div class="faq-answer">
+              <p>A postcode (or zip code / area code) is required to sort results by proximity. Without it we cannot tell you which providers are conveniently close to you. We only use it for geographic sorting and do not store or share your location.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">What does &ldquo;Tell me more&hellip;&rdquo; do on the results page?</summary>
+            <div class="faq-answer">
+              <p>Each result has a chat button that opens a conversation powered by an AI assistant. You can ask follow-up questions about that specific provider &mdash; what conditions they treat, whether they accept new patients, typical wait times, pricing, and so on. The assistant draws on the same research used to compile the result.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">Are you affiliated with any of the providers listed?</summary>
+            <div class="faq-answer">
+              <p>No. We have no commercial relationship with any provider. Results are ranked purely by relevance and proximity. Nobody pays to appear, and nobody can pay to be removed. Our only revenue is voluntary user tips.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How do I leave a tip?</summary>
+            <div class="faq-answer">
+              <p>Use the Ko-fi or PayPal buttons at the top of this page. Ko-fi lets you contribute as little as &pound;3 (&ldquo;one coffee&rdquo;) in a couple of clicks. PayPal accepts any amount. Both are secure and you do not need an account to pay via PayPal. We suggest roughly 2% of the value of any contract or work you commission as a result of a lead, but any amount is genuinely appreciated.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">My results look out of date. What can I do?</summary>
+            <div class="faq-answer">
+              <p>Run the search again &mdash; if the cached data is more than six months old it will be automatically refreshed. If you spot a specific error (wrong phone number, closed business, etc.) please email us at <a href="mailto:hello@findmea.example">hello@findmea.example</a> and we will update the record.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">How is my data protected?</summary>
+            <div class="faq-answer">
+              <p>Your email is used only to send you the results link. Your search terms and postcode are stored to build the results cache, improving speed for future users in the same area, but they are not linked to your email. We do not sell, rent, or share personal data with third parties. Cached search data is deleted after six months.</p>
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>Find Me A&hellip; &mdash; free, community-supported</span>
+      <a href="index.html">New search</a>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth open/close animation for details elements
+    document.querySelectorAll('.faq-item').forEach(function(details) {
+      details.addEventListener('toggle', function() {
+        if (details.open) {
+          // Close siblings
+          document.querySelectorAll('.faq-item[open]').forEach(function(other) {
+            if (other !== details) other.removeAttribute('open');
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

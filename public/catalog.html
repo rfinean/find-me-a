@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Results — Find Me A…</title>
+  <meta name="description" content="Your personalised local service results from Find Me A…" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="logo">Find Me A<span class="logo-dot">…</span></a>
+      <nav>
+        <a href="tips.html" class="nav-link">Tips &amp; FAQs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="catalog-hero">
+      <div class="container">
+        <p class="catalog-breadcrumb"><a href="index.html">&larr; New search</a></p>
+        <h1 class="catalog-title" id="catalogTitle">Results</h1>
+        <p class="catalog-sub" id="catalogSub"></p>
+      </div>
+    </section>
+
+    <section class="catalog-section">
+      <div class="container">
+
+        <!-- Loading state -->
+        <div class="catalog-loading" id="catalogLoading">
+          <div class="spinner"></div>
+          <p>Loading results&hellip;</p>
+        </div>
+
+        <!-- Results table (desktop) -->
+        <div class="table-wrap" id="tableWrap" style="display:none;">
+          <table class="results-table" id="resultsTable" aria-label="Search results">
+            <thead>
+              <tr>
+                <th scope="col">Who</th>
+                <th scope="col">What</th>
+                <th scope="col">Where</th>
+                <th scope="col">Reviews</th>
+                <th scope="col">Contact</th>
+                <th scope="col">Tell me more&hellip;</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Mobile cards -->
+        <div class="result-cards" id="resultCards" style="display:none;"></div>
+
+        <p class="catalog-tip">
+          Found this useful? <a href="tips.html">Please leave a tip</a> &mdash; it keeps this service free.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Chat drawer -->
+  <div class="chat-overlay" id="chatOverlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Ask more">
+    <div class="chat-drawer">
+      <div class="chat-header">
+        <div>
+          <p class="chat-header-label">Ask about</p>
+          <p class="chat-header-name" id="chatProviderName"></p>
+        </div>
+        <button class="chat-close" id="chatClose" aria-label="Close chat">&times;</button>
+      </div>
+      <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
+      <form class="chat-form" id="chatForm" novalidate>
+        <input type="text" class="chat-input" id="chatInput" placeholder="Ask a question…" autocomplete="off" required />
+        <button type="submit" class="chat-send" aria-label="Send">&#8594;</button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>Find Me A&hellip; &mdash; free, community-supported</span>
+      <a href="tips.html">Leave a tip</a>
+    </div>
+  </footer>
+
+  <script>
+    // ---- Parse URL params ----
+    const params = new URLSearchParams(window.location.search);
+    const what = params.get('what') || '';
+    const where = params.get('where') || '';
+
+    document.getElementById('catalogTitle').textContent = what ? 'Results for: ' + what : 'Results';
+    if (where) document.getElementById('catalogSub').textContent = 'Near ' + where;
+
+    // ---- Sample / mock data (replaced by real API call below) ----
+    const mockResults = [
+      {
+        name: 'City Spine & Wellness Clinic',
+        what: 'Physiotherapy and chiropractic care specialising in lower back and spine conditions.',
+        where: 'SW1A 1AA (0.4 mi)',
+        rating: 4.8,
+        reviewCount: 142,
+        reviewSource: 'Google',
+        phone: '+44 20 7946 0000',
+        website: 'https://example.com',
+        email: 'info@cityspiheclinic.example',
+      },
+      {
+        name: 'BackCare Physiotherapy',
+        what: 'NHS-registered physio focusing on musculoskeletal and spinal rehabilitation.',
+        where: 'SW1B 2BB (0.9 mi)',
+        rating: 4.6,
+        reviewCount: 89,
+        reviewSource: 'Trustpilot',
+        phone: '+44 20 7946 0111',
+        website: 'https://example.com',
+        email: null,
+      },
+      {
+        name: 'Dr. Sarah Okafor — Osteopath',
+        what: 'Osteopathic treatment for chronic and acute back pain, sciatica, and disc problems.',
+        where: 'SW1C 3CC (1.2 mi)',
+        rating: 5.0,
+        reviewCount: 37,
+        reviewSource: 'Google',
+        phone: null,
+        website: 'https://example.com',
+        email: 'sarah@okaforosteo.example',
+      },
+      {
+        name: 'HealWell Integrated Health',
+        what: 'Multi-disciplinary clinic: physio, acupuncture, and sports medicine for back conditions.',
+        where: 'SW1D 4DD (1.8 mi)',
+        rating: 4.5,
+        reviewCount: 203,
+        reviewSource: 'Google',
+        phone: '+44 20 7946 0222',
+        website: 'https://example.com',
+        email: 'hello@healwell.example',
+      },
+    ];
+
+    // ---- Fetch from API or fall back to mock ----
+    async function loadResults() {
+      let results = null;
+      try {
+        const url = '/api/results?' + new URLSearchParams({ what, where }).toString();
+        const resp = await fetch(url);
+        if (resp.ok) {
+          const data = await resp.json();
+          results = data.results;
+        }
+      } catch (_) {}
+
+      // Fall back to mock for demo purposes
+      if (!results || !results.length) results = mockResults;
+
+      document.getElementById('catalogLoading').style.display = 'none';
+      renderTable(results);
+      renderCards(results);
+    }
+
+    function starHTML(rating) {
+      const full = Math.round(rating);
+      let html = '';
+      for (let i = 1; i <= 5; i++) {
+        html += '<span class="star' + (i <= full ? ' filled' : '') + '">&#9733;</span>';
+      }
+      return html;
+    }
+
+    function contactHTML(r) {
+      const parts = [];
+      if (r.phone) parts.push('<a href="tel:' + r.phone + '" class="contact-link">' + r.phone + '</a>');
+      if (r.email) parts.push('<a href="mailto:' + r.email + '" class="contact-link">' + r.email + '</a>');
+      if (r.website) parts.push('<a href="' + r.website + '" target="_blank" rel="noopener" class="contact-link">Website &#8599;</a>');
+      return parts.join('<br>') || '—';
+    }
+
+    function renderTable(results) {
+      const tbody = document.getElementById('resultsBody');
+      tbody.innerHTML = '';
+      results.forEach(function(r, i) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="td-who"><strong>' + esc(r.name) + '</strong></td>' +
+          '<td class="td-what">' + esc(r.what) + '</td>' +
+          '<td class="td-where">' + esc(r.where) + '</td>' +
+          '<td class="td-reviews"><div class="stars">' + starHTML(r.rating) + '</div><span class="review-meta">' + r.rating + ' &bull; ' + r.reviewCount + ' reviews &bull; ' + esc(r.reviewSource) + '</span></td>' +
+          '<td class="td-contact">' + contactHTML(r) + '</td>' +
+          '<td class="td-chat"><button class="btn-chat" data-index="' + i + '" aria-label="Ask more about ' + esc(r.name) + '">Tell me more&hellip;</button></td>';
+        tbody.appendChild(tr);
+      });
+      document.getElementById('tableWrap').style.display = '';
+      attachChatButtons(results);
+    }
+
+    function renderCards(results) {
+      const cards = document.getElementById('resultCards');
+      cards.innerHTML = '';
+      results.forEach(function(r, i) {
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.innerHTML =
+          '<div class="card-header"><strong class="card-name">' + esc(r.name) + '</strong>' +
+          '<span class="card-where">' + esc(r.where) + '</span></div>' +
+          '<p class="card-what">' + esc(r.what) + '</p>' +
+          '<div class="card-reviews"><div class="stars">' + starHTML(r.rating) + '</div><span class="review-meta">' + r.rating + ' &bull; ' + r.reviewCount + ' &bull; ' + esc(r.reviewSource) + '</span></div>' +
+          '<div class="card-contact">' + contactHTML(r) + '</div>' +
+          '<button class="btn-chat" data-index="' + i + '" aria-label="Ask more about ' + esc(r.name) + '">Tell me more&hellip;</button>';
+        cards.appendChild(card);
+      });
+      cards.style.display = '';
+    }
+
+    // ---- Chat drawer ----
+    let currentProvider = null;
+    let chatHistory = [];
+
+    function attachChatButtons(results) {
+      document.querySelectorAll('.btn-chat').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const i = parseInt(this.dataset.index, 10);
+          openChat(results[i]);
+        });
+      });
+    }
+
+    function openChat(provider) {
+      currentProvider = provider;
+      chatHistory = [];
+      document.getElementById('chatProviderName').textContent = provider.name;
+      document.getElementById('chatMessages').innerHTML = '';
+      appendMessage('assistant', 'Hi! I can tell you more about <strong>' + esc(provider.name) + '</strong>. What would you like to know?');
+      document.getElementById('chatOverlay').style.display = '';
+      document.getElementById('chatInput').focus();
+    }
+
+    document.getElementById('chatClose').addEventListener('click', function() {
+      document.getElementById('chatOverlay').style.display = 'none';
+    });
+
+    document.getElementById('chatOverlay').addEventListener('click', function(e) {
+      if (e.target === this) this.style.display = 'none';
+    });
+
+    document.getElementById('chatForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      appendMessage('user', esc(msg));
+      chatHistory.push({ role: 'user', content: msg });
+
+      // Show typing indicator
+      const typingId = appendMessage('assistant', '<span class="typing"><span></span><span></span><span></span></span>');
+
+      try {
+        const resp = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: currentProvider,
+            messages: chatHistory,
+            what: what,
+            where: where
+          })
+        });
+        const data = await resp.json();
+        removeMessage(typingId);
+        const reply = data.reply || 'Sorry, I could not get a response right now.';
+        appendMessage('assistant', esc(reply));
+        chatHistory.push({ role: 'assistant', content: reply });
+      } catch (_) {
+        removeMessage(typingId);
+        appendMessage('assistant', 'Sorry, I&apos;m unable to connect right now. Please try again shortly.');
+      }
+    });
+
+    let msgId = 0;
+    function appendMessage(role, html) {
+      const id = 'msg-' + (++msgId);
+      const div = document.createElement('div');
+      div.className = 'chat-msg chat-msg--' + role;
+      div.id = id;
+      div.innerHTML = html;
+      const container = document.getElementById('chatMessages');
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+      return id;
+    }
+
+    function removeMessage(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ---- Init ----
+    loadResults();
+  </script>
+</body>
+</html>
