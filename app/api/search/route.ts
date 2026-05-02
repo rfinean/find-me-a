@@ -72,12 +72,17 @@ async function processSearchJob(
     // Get results from Bright Data MCP or fall back to Gemini AI
     let results
     if (process.env.BRIGHTDATA_API_TOKEN) {
+      console.log("[v0] Using Bright Data to search")
       results = await searchWithBrightData(what, where)
     } else {
       console.log(
         "[v0] BRIGHTDATA_API_TOKEN not set, using Gemini to search instead"
       )
       results = await searchWithGemini(what, where)
+    }
+
+    if (!results || results.length === 0) {
+      throw new Error("No real search results found from any source")
     }
 
     // Insert results
@@ -274,40 +279,14 @@ Return ONLY valid JSON objects, one per line. No markdown, no explanations.`
     }
 
     if (results.length === 0) {
-      console.warn("[v0] Gemini search returned no valid results")
-      // Return at least some results to avoid empty state
-      return [
-        {
-          name: `Local ${what} Services in ${where}`,
-          phone: null,
-          email: null,
-          website: null,
-          address: where,
-          rating: 4.0,
-          review_count: 0,
-          description: `Search for ${what} services in ${where}. Results vary by location.`,
-          source: "Web Search",
-        },
-      ]
+      console.warn("[v0] Gemini search returned no valid results for:", what, "in", where)
+      throw new Error("No valid results from Gemini search")
     }
 
     return results.slice(0, 5)
   } catch (error) {
     console.error("[v0] Gemini search failed:", error)
-    // Return a single result indicating the search couldn't be completed
-    return [
-      {
-        name: `Search Results for ${what}`,
-        phone: null,
-        email: null,
-        website: null,
-        address: where,
-        rating: 0,
-        review_count: 0,
-        description: `Unable to fetch live results. Please refine your search query: "${what}" in "${where}".`,
-        source: "Search Error",
-      },
-    ]
+    throw error
   }
 }
 
