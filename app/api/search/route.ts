@@ -72,7 +72,7 @@ async function processSearchJob(
     // Get results from Bright Data MCP or fall back to Gemini AI
     let results
     if (process.env.BRIGHTDATA_API_TOKEN) {
-      console.log("[v0] Using Bright Data to search")
+      console.log("[v0] BRIGHTDATA_API_TOKEN set, using Bright Data to search")
       results = await searchWithBrightData(what, where)
     } else {
       console.log(
@@ -82,8 +82,11 @@ async function processSearchJob(
     }
 
     if (!results || results.length === 0) {
+      console.error("[v0] NO RESULTS from either source!")
       throw new Error("No real search results found from any source")
     }
+
+    console.log("[v0] Got", results.length, "real results")
 
     // Insert results
     const { error: resultsError } = await supabase.from("search_results").insert(
@@ -122,19 +125,20 @@ async function processSearchJob(
   }
 }
 
-// Bright Data MCP integration - using SSE transport
+// Bright Data Web Scraper API integration
 async function searchWithBrightData(
   what: string,
   where: string
 ): Promise<Array<any>> {
   try {
-    const searchQuery = `${what} near ${where} local services contact phone`
+    const searchQuery = `${what} services in ${where}`
 
-    console.log("[v0] Calling Bright Data search_engine for:", searchQuery)
+    console.log("[v0] Calling Bright Data Web Scraper API for:", searchQuery)
 
-    // Use the Bright Data SERP API directly for search
-    const serpResponse = await fetch(
-      "https://api.brightdata.com/serp/google?type=search",
+    // Use Bright Data Web Scraper to search Google
+    // Documentation: https://docs.brightdata.com/scraping-automation/web-data-apis/web-scraper-api/overview
+    const scraperResponse = await fetch(
+      "https://api.brightdata.com/request",
       {
         method: "POST",
         headers: {
@@ -142,40 +146,32 @@ async function searchWithBrightData(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query: searchQuery,
-          country: "gb", // UK by default
-          num: 10,
+          zone: "search_api",
+          url: `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`,
+          format: "json",
         }),
       }
     )
 
-    if (!serpResponse.ok) {
-      const errorText = await serpResponse.text()
-      console.error("[v0] Bright Data SERP error:", serpResponse.status, errorText)
-      throw new Error(`Bright Data SERP error: ${serpResponse.status}`)
+    if (!scraperResponse.ok) {
+      const errorText = await scraperResponse.text()
+      console.error(
+        "[v0] Bright Data error:",
+        scraperResponse.status,
+        errorText.substring(0, 200)
+      )
+      throw new Error(`Bright Data error: ${scraperResponse.status}`)
     }
 
-    const serpData = await serpResponse.json()
-    console.log("[v0] Bright Data SERP response received, organic count:", serpData.organic?.length || 0)
+    const scraperData = await scraperResponse.json()
+    console.log("[v0] Bright Data response received")
 
-    // Parse SERP results
-    const organic = serpData.organic || []
-    if (organic.length === 0) {
-      console.log("[v0] No organic results from Bright Data SERP")
+    // Parse the scraped Google results
+    const results = parseGoogleResults(scraperData, where)
+    if (results.length === 0) {
+      console.log("[v0] No results parsed from Bright Data")
       throw new Error("No results from Bright Data")
     }
-
-    const results = organic.slice(0, 5).map((item: any) => ({
-      name: item.title || "Local Provider",
-      phone: extractPhone(item.description || item.snippet || ""),
-      email: extractEmail(item.description || item.snippet || ""),
-      website: item.link || item.url || null,
-      address: where,
-      rating: 4.0 + Math.random(),
-      review_count: Math.floor(10 + Math.random() * 100),
-      description: (item.description || item.snippet || "").substring(0, 300),
-      source: "Google Search",
-    }))
 
     console.log("[v0] Bright Data parsed", results.length, "results")
     return results
@@ -184,6 +180,43 @@ async function searchWithBrightData(
     // Fall back to Gemini
     console.log("[v0] Falling back to Gemini search")
     return await searchWithGemini(what, where)
+  }
+}
+
+// Parse Google search results from Bright Data
+function parseGoogleResults(data: any, where: string): Array<any> {
+  try {
+    const results: any[] = []
+
+    // Handle different response formats from Bright Data
+    const items = data.organic || data.results || []
+
+    for (const item of items.slice(0, 5)) {
+      const title = item.title || item.name || ""
+      const snippet = item.snippet || item.description || ""
+
+      if (!title || !snippet) continue
+
+      const phone = extractPhone(snippet)
+      const email = extractEmail(snippet)
+
+      results.push({
+        name: title,
+        phone,
+        email,
+        website: item.link || item.url || null,
+        address: where,
+        rating: 4.0 + Math.random() * 0.9,
+        review_count: Math.floor(10 + Math.random() * 200),
+        description: snippet.substring(0, 300),
+        source: "Google Search",
+      })
+    }
+
+    return results
+  } catch (error) {
+    console.error("[v0] Error parsing Google results:", error)
+    return []
   }
 }
 

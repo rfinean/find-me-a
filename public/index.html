@@ -190,34 +190,44 @@
 
     function pollForResults(jobId, what, where) {
       let attempts = 0;
-      const maxAttempts = 36; // 3 min at 5s intervals
+      const maxAttempts = 72; // 6 min at 5s intervals - wait longer for real results
       const interval = setInterval(async () => {
         attempts++;
         try {
           const resp = await fetch('/api/status?jobId=' + encodeURIComponent(jobId));
           const data = await resp.json().catch(() => ({}));
+          
           if (resp.ok && data.status === 'completed') {
             clearInterval(interval);
-            const catalogUrl = 'catalog.html?jobId=' + encodeURIComponent(jobId);
-            viewResultsLink.href = catalogUrl;
-            viewResultsLink.style.display = 'inline-flex';
+            // Verify results actually exist before showing button
+            const resultsResp = await fetch('/api/results?jobId=' + encodeURIComponent(jobId));
+            if (resultsResp.ok) {
+              const resultsData = await resultsResp.json();
+              if (resultsData.results && resultsData.results.length > 0) {
+                const catalogUrl = 'catalog.html?jobId=' + encodeURIComponent(jobId);
+                viewResultsLink.href = catalogUrl;
+                viewResultsLink.style.display = 'inline-flex';
+                console.log("[v0] Real results found, showing button");
+              } else {
+                document.getElementById('holdingBody').innerHTML = 
+                  '<strong>Sorry!</strong> No real results found. Please <a href="index.html">try again</a>.';
+              }
+            }
           } else if (data.status === 'failed') {
             clearInterval(interval);
             document.getElementById('holdingBody').innerHTML = 
-              '<strong>Sorry!</strong> We couldn&apos;t complete your search. Please <a href="index.html">try again</a>.';
+              '<strong>Sorry!</strong> Search failed: ' + (data.error_message || 'Unknown error') + '. <a href="index.html">Try again</a>.';
           } else if (attempts >= maxAttempts) {
             clearInterval(interval);
-            // Show link anyway after timeout
-            const catalogUrl = 'catalog.html?jobId=' + encodeURIComponent(jobId);
-            viewResultsLink.href = catalogUrl;
-            viewResultsLink.style.display = 'inline-flex';
+            // Timeout - show error instead of blank results
+            document.getElementById('holdingBody').innerHTML = 
+              '<strong>Search took too long.</strong> <a href="index.html">Try again</a>.';
           }
-        } catch {
+        } catch (err) {
           if (attempts >= maxAttempts) {
             clearInterval(interval);
-            const catalogUrl = 'catalog.html?jobId=' + encodeURIComponent(jobId);
-            viewResultsLink.href = catalogUrl;
-            viewResultsLink.style.display = 'inline-flex';
+            document.getElementById('holdingBody').innerHTML = 
+              '<strong>Network error.</strong> <a href="index.html">Try again</a>.';
           }
         }
       }, 5000);
