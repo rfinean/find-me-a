@@ -98,7 +98,6 @@
           Results usually appear within 1&ndash;2 minutes. We&apos;ll search
           reviews, directories, and professional listings near you.
         </p>
-        <a href="#" class="btn-secondary" id="viewResultsLink" style="display:none;">View results now &rarr;</a>
       </div>
     </section>
 
@@ -138,7 +137,6 @@
     const searchSection = document.getElementById('search-section');
     const trustStrip = document.getElementById('trustStrip');
     const holdingWhat = document.getElementById('holdingWhat');
-    const viewResultsLink = document.getElementById('viewResultsLink');
     const formError = document.getElementById('formError');
 
     form.addEventListener('submit', async function(e) {
@@ -199,15 +197,15 @@
           
           if (resp.ok && data.status === 'completed') {
             clearInterval(interval);
-            // Verify results actually exist before showing button
+            // Verify results actually exist before redirecting
             const resultsResp = await fetch('/api/results?jobId=' + encodeURIComponent(jobId));
             if (resultsResp.ok) {
               const resultsData = await resultsResp.json();
               if (resultsData.results && resultsData.results.length > 0) {
+                // Auto-redirect to catalog with results
                 const catalogUrl = 'catalog.html?jobId=' + encodeURIComponent(jobId);
-                viewResultsLink.href = catalogUrl;
-                viewResultsLink.style.display = 'inline-flex';
-                console.log("[v0] Real results found, showing button");
+                console.log("[v0] Real results found, redirecting to", catalogUrl);
+                window.location.href = catalogUrl;
               } else {
                 document.getElementById('holdingBody').innerHTML = 
                   '<strong>Sorry!</strong> No real results found. Please <a href="index.html">try again</a>.';
