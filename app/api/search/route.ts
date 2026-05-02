@@ -158,7 +158,7 @@ async function searchWithBrightData(
     console.log("[v0] Bright Data response:", JSON.stringify(data).substring(0, 200))
 
     // Parse Bright Data results and transform them
-    const results = parseSearchResults(data, where)
+    const results = await parseSearchResults(data, where)
     return results
   } catch (error) {
     console.error("[v0] Bright Data search failed:", error)
@@ -168,7 +168,7 @@ async function searchWithBrightData(
   }
 }
 
-function parseSearchResults(brightDataResponse: any, where: string) {
+async function parseSearchResults(brightDataResponse: any, where: string): Promise<Array<any>> {
   try {
     // Extract results from Bright Data response
     // This will vary depending on actual API response format
